@@ -39,12 +39,22 @@ for rs in re_list: #x1,y1
     #鼠标移动并进行点击 (事件量)
     ActionChains(web).move_to_element_with_offset(verify_img_element, x, y).click().perform() #移动到 以某个"地点"为基准的偏移量为...的地方 最后perform为执行操作的意思
 
+time.sleep(1)
 #输入用户名
 web.find_element(By.XPATH, '//*[@id="J-userName"]').send_keys("18358927373")
 #输入密码
 web.find_element(By.XPATH, '//*[@id="J-password"]').send_keys("6116226cai")
 #点击登录
 web.find_element(By.XPATH, '//*[@id="J-login"]').click()
+
+time.sleep(1)
+
+'''
+拖拽滑块
+'''
+#定位滑块
+btn = web.find_element(By.XPATH, '//*[@id="nc_1_n1z"]')
+ActionChains(web).drag_and_drop_by_offset(btn, 400, 0).perform()
 
 
 

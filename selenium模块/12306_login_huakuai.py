@@ -6,7 +6,7 @@ from selenium.webdriver.common.by import By
 #导入驱动选项包
 from selenium.webdriver.chrome.options import Options
 
-#去掉自动化标志
+#去掉自动化标志(滑块能监测到自动化工具)
 option = Options()
 option.add_experimental_option('excludeSwitches', ['enable-automation'])
 option.add_argument('--disable-blink-features=AutomationControlled')
