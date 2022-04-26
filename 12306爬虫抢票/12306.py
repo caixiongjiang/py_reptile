@@ -100,19 +100,49 @@ class Login12306():
 
         #点击到能预定的车次
         self.driver.find_element(By.XPATH, '//*[@id="sear-result"]/span/label[2]').click()
+        # 解析车次信息
+        WebDriverWait(self.driver, 1000).until(
+            EC.presence_of_all_elements_located((By.XPATH, "//tbody[@id='queryLeftTable']/tr"))
+        )
+        tran_trs = self.driver.find_elements(By.XPATH, "//tbody[@id='queryLeftTable']/tr[not(@datatran)]")
         index = 1
-        id = 1
-        while index:
-            items = self.driver.find_element(By.XPATH, '//*[@id="queryLeftTable"]/tr[' + str(index) + ']').text
-            item = items.split('\n')
-            print("======================")
-            print(str(id) + '.')
-            print(" " + "车次：" + item[0])
-            print("  " + "出发站-终点站：" + item[1] + "-" + item[2])
-            print("  " + "出发时间-到达时间：" + item[3] + "-" + item[4])
-            print(" " + "历时：" + item[5] + " " + item[6])
-            print(" " + "商务座/特等座：" + item[7])
-            temps = item[8]
+        infos = [[] for y in range(30)] #定义一个二维数组，y的维度定为30，因为1天的车次一般不会超过30
+        for tran_tr in tran_trs:
+            infos[index - 1] = tran_tr.text.replace('\n', ' ').split(' ')
+            print("=============================================================================================================================================================================")
+            print(str(index) + ".", end="")
+            print("  车次：" + infos[index - 1][0], end="")
+            print("  出发站-到达站：" + infos[index - 1][1] + "-" + infos[index - 1][2], end="")
+            print("  出发时间-到达时间：" + infos[index - 1][3] + "-" + infos[index - 1][4], end="")
+            print("  历时：" + infos[index - 1][5] + " " + infos[index - 1][6], end="")
+            print("  特等座/商务座：" + infos[index - 1][7], end="")
+            print("  一等座：" + infos[index - 1][8], end="")
+            print("  二等座/二等包座：" + infos[index - 1][9], end="")
+            print("  高级软卧：" + infos[index - 1][10], end="")
+            print("  软卧/一等卧：" + infos[index - 1][11], end="")
+            print("  动卧：" + infos[index - 1][12], end="")
+            print("  硬卧/二等卧：" + infos[index - 1][13], end="")
+            print("  软座：" + infos[index - 1][14], end="")
+            print("  硬座：" + infos[index - 1][15], end="")
+            print("  无座：" + infos[index - 1][16], end="")
+            print("  其他：" + infos[index - 1][17])
+            index += 1
+        id = input("请输入要查看的班次号：") #bug：由于需要在terminal输入id，会失去选中网页（待解决）
+
+        #选中id相应的车次查看票价
+        num = 1
+        selects = self.driver.find_elements(By.TAG_NAME, 'b')
+        for select in selects:
+            if num == id:
+                select.click()
+                break
+            num += 1
+
+        #爬取票价
+        #price_el_list = self.driver.find_elements(By.XPATH, "//tbody[@id='queryLeftTable']/tr[(@datatran)]")
+        #for price_el in price_el_list:
+            #prices = price_el.find_elements(By.CLASS_NAME, "p-num")
+            #for price in prices:
 
 
 
