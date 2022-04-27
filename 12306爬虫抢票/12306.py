@@ -6,6 +6,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver import ActionChains
 from selenium.webdriver import ChromeOptions
+from selenium.webdriver.support.select import Select #引入select包，为了下拉列表使用
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 
 
@@ -74,6 +75,8 @@ class Login12306():
         destination = input("请输入目的地：")
         date = input("请输入日期（年-月-日）：")
         isStudent = input("是否为学生票（输入Y代表是，其他代表不是）：")
+        print("座位类型：特等座/商务座  一等座 二等座/二等包座 高级软卧 软卧/一等卧 动卧 硬卧/二等卧 软座 硬座 无座 其他")
+        type = input("请输入座位类型：")
         if isStudent == "y" or isStudent == "Y":
             flag = True
         else:
@@ -105,12 +108,30 @@ class Login12306():
             EC.presence_of_all_elements_located((By.XPATH, "//tbody[@id='queryLeftTable']/tr"))
         )
         tran_trs = self.driver.find_elements(By.XPATH, "//tbody[@id='queryLeftTable']/tr[not(@datatran)]")
-        index = 1
-        infos = [[] for y in range(30)] #定义一个二维数组，y的维度定为30，因为1天的车次一般不会超过30
+
+        infos = [[] for y in range(40)] #定义一个二维数组，y的维度定为40，因为1天的车次一般不会超过40
+
+        types = ["特等座/商务座", "一等座", "二等座/二等包座", "高级软卧", "软卧/一等卧", "动卧", "硬卧/二等卧", "软座", "硬座", "无座", "其他"]
+        for i in range(len(types)):
+            if types[i] == type:
+                type_id = i + 7
+                break
+        '''
+        注意infos存储的是网页上所有车次的信息，没有筛选座位类型的结果
+        '''
+        index = 1 #网页上真实的次序
         for tran_tr in tran_trs:
             infos[index - 1] = tran_tr.text.replace('\n', ' ').split(' ')
+            #去除多余字段
+            if infos[index - 1][1] == "复":
+                infos[index - 1].remove("复")
+            if infos[index - 1][type_id] == "--" or infos[index - 1][type_id] == "无":
+                index += 1
+                continue
+            #打印有此座位类型的余票信息
             print("=============================================================================================================================================================================")
-            print(str(index) + ".", end="")
+            print("序号：", end = "")
+            print(str(index), end="")
             print("  车次：" + infos[index - 1][0], end="")
             print("  出发站-到达站：" + infos[index - 1][1] + "-" + infos[index - 1][2], end="")
             print("  出发时间-到达时间：" + infos[index - 1][3] + "-" + infos[index - 1][4], end="")
@@ -127,25 +148,72 @@ class Login12306():
             print("  无座：" + infos[index - 1][16], end="")
             print("  其他：" + infos[index - 1][17])
             index += 1
-        id = input("请输入要查看的班次号：") #bug：由于需要在terminal输入id，会失去选中网页（待解决）
 
-        #选中id相应的车次查看票价
-        num = 1
-        selects = self.driver.find_elements(By.TAG_NAME, 'b')
-        for select in selects:
-            if num == id:
-                select.click()
+        while(1):
+            select = input("请输入要选择的班次序号：")
+            if int(select) > index:
+                print("请输入正确的次序号！")
+                continue
+            break
+
+        #点击预定
+        btns = self.driver.find_elements(By.CLASS_NAME, 'btn72')
+        for i in range(len(btns)):
+            if i == int(select) - 1: #select从1开始，i从0开始
+                btns[i].click()
                 break
-            num += 1
+        time.sleep(1)
+        #如果操作时间过长就要继续进行验证（虽然前面已经登录了还是要验证）
 
-        #爬取票价
-        #price_el_list = self.driver.find_elements(By.XPATH, "//tbody[@id='queryLeftTable']/tr[(@datatran)]")
-        #for price_el in price_el_list:
-            #prices = price_el.find_elements(By.CLASS_NAME, "p-num")
-            #for price in prices:
+        #输入用户名和密码,点击登录
+        # self.driver.find_element(By.XPATH, '//*[@id="J-userName"]').send_keys(self.login_user)
+        # self.driver.find_element(By.XPATH, '//*[@id="J-password"]').send_keys(self.login_passwd)
+        # self.driver.find_element(By.XPATH, '//*[@id="J-login"]').click()
+        # time.sleep(0.5)
+
+        #滑块验证
+        # span = self.driver.find_element(By.XPATH, '//*[@id="nc_1_n1z"]')
+        # actions = ActionChains(self.driver)
+        # actions.click_and_hold(span)
+        # actions.drag_and_drop_by_offset(span, 350, 0)
+        # actions.perform()
 
 
+        #选择票类型和乘客类型
+        if flag: #(学生票)
+            self.driver.find_element(By.XPATH, '//*[@id="normal_passenger_id"]/li[1]/label').click()
+        self.driver.find_element(By.XPATH, '//*[@id="dialog_xsertcj_ok"]').click()
 
+        #下拉框选择
+        options_element = self.driver.find_element(By.XPATH, '//*[@id="seatType_1"]')
+        options = Select(options_element)
+        for i in range(len(options)):
+            select.select_by_visible_text(type)
+
+        #提交订单
+        self.driver.find_element(By.XPATH, '//*[@id="submitOrder_id"]').click()
+        print(" 窗 | A | B | C | 过道 | D | F | 窗 ")
+        dest_el = self.driver.find_elements(By.CSS_SELECTOR, 'rect')
+        while(1):
+            dest = input("请选择你的座位序号：")
+            if dest == 'A':
+                dest_el[0].click()
+            elif dest == 'B':
+                dest_el[1].click()
+            elif dest == 'C':
+                dest_el[2].click()
+            elif dest == 'D':
+                dest_el[3].click()
+            elif dest == 'F':
+                dest_el[4].click()
+            else:
+                print("请输入正确的座位")
+                continue
+            break
+        time.sleep(1)
+        #最后确认
+        self.driver.find_element(By.XPATH, '//*[@id="qr_submit_id"]').click()
+        print("订票成功！")
 
 def main():
     url = 'https://kyfw.12306.cn/otn/resources/login.html'

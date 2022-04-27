@@ -33,3 +33,6 @@
   option.add_experimental_option('excludeSwitches', ['enable-automation'])
   option.add_argument('--disable-blink-features=AutomationControlled')
     ```
+  
+### 使用selenium 12306爬虫买票
+- [12306.py]()

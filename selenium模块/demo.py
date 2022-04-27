@@ -10,7 +10,7 @@ opt = Options()
 opt.add_argument("--headless")
 opt.add_argument("--disable-gpu") #不显示
 
-driver = Chrome(options=opt)
+driver = Chrome()
 
 #打开一个网址
 driver.get("https://kyfw.12306.cn/otn/leftTicket/init?linktypeid=dc&fs=%E5%8D%97%E6%98%8C,NCG&ts=%E8%B5%A3%E5%B7%9E,GZG&date=2022-04-28&flag=Y,N,Y")
@@ -23,16 +23,15 @@ driver.find_element(By.XPATH, '//*[@id="sear-result"]/span/label[2]').click()
 WebDriverWait(driver,1000).until(
     EC.presence_of_all_elements_located((By.XPATH,"//tbody[@id='queryLeftTable']/tr"))
 )
-tran_trs=driver.find_elements_by_xpath("//tbody[@id='queryLeftTable']/tr[not(@datatran)]")
-selects = driver.find_elements(By.TAG_NAME, 'b')
+tran_trs=driver.find_elements(By.XPATH, "//tbody[@id='queryLeftTable']/tr[not(@datatran)]")
 for tran_tr in tran_trs:
     infos=tran_tr.text.replace('\n',' ').split(' ')
     print(infos)
 num = 1
-id = input("id:")
+selects = driver.find_elements(By.TAG_NAME, 'b')
+id = 3
 for select in selects:
     if num == id:
         select.click()
         break
     num += 1
-
